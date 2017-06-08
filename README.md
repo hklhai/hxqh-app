@@ -1,2 +1,2 @@
 # ssh-shiro
-SSH-FrameWork-IDEA-Shiro
+SSH-FrameWork-IDEA-HXQH-EAM
