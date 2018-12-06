@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.lang.annotation.ElementType;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -422,8 +421,6 @@ public class SystemServiceImpl implements SystemService {
 
     @Override
     public ModelIndexDto getModelIndex(String loginname) {
-//        LinkedHashMap<String, String> orderby = new LinkedHashMap<>();
-//        orderby.put("modelid", "asc");
 
         Map<String, Object> params = new HashMap<>();
         params.put("loginname", loginname);
@@ -448,13 +445,30 @@ public class SystemServiceImpl implements SystemService {
             }
         }
 
+        // 获取所有子节点
+        Map<String, Object> p = new HashMap<>();
+        String notNull = "parentid is not null ";
+        List<TbModel> allChildlList = modelDao.findAll(notNull, null, null);
+
+        // 分组map集合
+        // 对childlList分组
+        Map<Long, List<TbModel>> childMap = GroupListUtil.group(allChildlList, new GroupListUtil.GroupBy<Long>() {
+            @Override
+            public Long groupby(Object obj) {
+                TbModel d = (TbModel) obj;
+                // 分组依据为Regional
+                return d.getParentid();
+            }
+        });
+
         //返回子节点信息, 并打包到父节点下
         for (TbModel e : modelList) {
-            Map<String, Object> p = new HashMap<>();
-            p.put("parentid", e.getModelid());
-            String w = "parentid=:parentid ";
+//            Map<String, Object> p = new HashMap<>();
+//            p.put("parentid", e.getModelid());
+//            String w = "parentid=:parentid ";
 
-            List<TbModel> childlList = modelDao.findAll(w, p, null);
+//            List<TbModel> childlList = modelDao.findAll(w, p, null);
+            List<TbModel> childlList = childMap.get(e.getModelid());
             for (TbModel ele : childlList) {
                 if (ele.getMurl() != null) {
                     String s = ele.getMurl().replaceAll("#", "&");
@@ -470,7 +484,6 @@ public class SystemServiceImpl implements SystemService {
         //modelList排序
         ListSortUtil<TbModel> sortList = new ListSortUtil<TbModel>();
         sortList.sort(mList, "sortnum", "asc");
-
 
         return new ModelIndexDto(mList);
     }
